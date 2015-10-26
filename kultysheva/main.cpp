@@ -1,49 +1,36 @@
 #include <iostream>
-#include "math.h"
-#include <signal.h>
-using namespace std;
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cmath>
 
-const int ARITY = 3;
-bool expression(bool *x){
-  return !x[0] || x[1] && x[2];
+bool func(bool x1, bool x2, bool x3)
+{
+	//return (x1 || x2) && (!x2 || x3);
+	//return !x1 && !x2 && !x3;
+	return (x1 || !x2) && x3;
 }
 
-void print_input(bool *input){
-  for(int i = 0; i < ARITY; ++i){
-    cout << input[i];
-  }
+int main()
+{
+	int x[3];
+	int ppid = getpid();
+	std::cout << "PARENT PID: " << getpid() << std::endl;
+
+	for(int i = 0; i < 3; ++i){
+		x[i] = fork();
+	}
+	printf(
+		"Input in PID %d: expression(%d%d%d) = %d\n",
+	  getpid(),
+	  (bool)x[0], (bool)x[1], (bool)x[2],
+	  func(x[0], x[1], x[2])
+	);
+
+	sleep(60);
+
+	return 0;
 }
 
-int main() {
-  int inputs_count = pow(2, ARITY);
-  bool **inputs = new bool*[inputs_count];
-  cout << "PARENT PROCESS: " << getpid() << endl;
 
-  for(int i = 0; i < inputs_count; ++i){
-    inputs[i] = new bool[ARITY];
-    for(int j = 0; j < ARITY; ++j){
-      inputs[i][j] = i & (int)pow(2, ARITY - j - 1);
-    }
-  }
-  for(int i = 0; i < ARITY; ++i){
-    if(fork() == 0){
-      for(int j = 0; j < inputs_count; ++j){
-        if(fork() == 0){
-          if(expression(inputs[j])){
-            cout << "Truthy input in PID " << getpid() << ": ";
-            print_input(inputs[j]);
-            cout << endl;
-          } else {
-            cout << "False input in PID " << getpid() << ": ";
-            print_input(inputs[j]);
-            cout << endl;
-          }
-          kill(getpid(), SIGTERM);
-        }
-      }
-      break;
-    }
-  }
-  sleep(60);
-  return 0;
-}
