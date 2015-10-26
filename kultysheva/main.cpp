@@ -1,4 +1,6 @@
 #include <iostream>
+#include "math.h"
+#include <signal.h>
 using namespace std;
 
 const int ARITY = 3;
@@ -12,57 +14,31 @@ void print_input(bool *input){
   }
 }
 
-void print_if_truthy(bool *input, int setted_values = 0) {
-  if(setted_values == ARITY - 1){
-    bool *input0 = new bool[ARITY];
-    bool *input1 = new bool[ARITY];
-    memcpy(input0, input, ARITY * sizeof(bool));
-    memcpy(input1, input, ARITY * sizeof(bool));
-    input0[setted_values] = false;
-    input1[setted_values] = true;
+int main() {
+  int inputs_count = pow(2, ARITY);
+  bool **inputs = new bool*[inputs_count];
 
-    if(expression(input0)){
-      cout << "Truthy input: ";
-      print_input(input0);
-      cout << endl;
-    }
-    if(expression(input1)){
-      cout << "Truthy input: ";
-      print_input(input1);
-      cout << endl;
-    }
-  } else {
-    int parent_pid = getpid();
-    pid_t pid = fork();
-    if(pid == 0){
-      // cout << getpid() << endl;
-      // cout << setted_values << "|";
-      // print_input(input);
-      // cout << endl;
-      bool *input0 = new bool[ARITY];
-      bool *input1 = new bool[ARITY];
-      memcpy(input0, input, ARITY * sizeof(bool));
-      memcpy(input1, input, ARITY * sizeof(bool));
 
-      input0[setted_values] = false;
-      input1[setted_values] = true;
-      cout << "Generated 2 childs for solving\n";
-      print_input(input0);
-      cout << "|" << setted_values << endl;
-      print_input(input1);
-      cout << "|" << setted_values << endl;
-
-      setted_values++;
-      print_if_truthy(input0, setted_values);
-      print_if_truthy(input1, setted_values);
-    } else if(pid > 0){
-      // cout << "\nParent process stoped. PID:" << parent_pid << "\n#######\n";
+  for(int i = 0; i < inputs_count; ++i){
+    inputs[i] = new bool[ARITY];
+    for(int j = 0; j < ARITY; ++j){
+      inputs[i][j] = i & (int)pow(2, ARITY - j - 1);
     }
   }
-}
-
-int main() {
-  bool *input = new bool[ARITY];
-  print_if_truthy(input);
+  for (int i = 0; i < inputs_count; ++i)
+  {
+    if(fork() == 0){
+      if(expression(inputs[i])){
+        cout << "Truthy input in PID " << getpid() << ": ";
+        print_input(inputs[i]);
+        cout << endl;
+      } else {
+        cout << "False input in PID " << getpid() << ": ";
+        print_input(inputs[i]);
+        cout << endl;
+      }
+      kill(getpid(), SIGTERM);
+    }
+  }
   return 0;
 }
