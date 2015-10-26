@@ -37,12 +37,7 @@ public:
         exit(1);
       default:
         dup2(fds[0], 0);
-        while(1){
-          cin >> buff;
-          if(regex_match(buff, prototype_regex)){
-            cout << buff << endl;
-          }
-      }
+        execl("/usr/bin/grep", "grep", prototype, NULL);
     }
   }
 
