@@ -5,7 +5,7 @@ using namespace std;
 
 const int ARITY = 3;
 bool expression(bool *x){
-  return x[0] || x[1] && x[2];
+  return !x[0] || x[1] && x[2];
 }
 
 void print_input(bool *input){
@@ -17,7 +17,7 @@ void print_input(bool *input){
 int main() {
   int inputs_count = pow(2, ARITY);
   bool **inputs = new bool*[inputs_count];
-
+  cout << "PARENT PROCESS: " << getpid() << endl;
 
   for(int i = 0; i < inputs_count; ++i){
     inputs[i] = new bool[ARITY];
@@ -40,5 +40,6 @@ int main() {
       kill(getpid(), SIGTERM);
     }
   }
+  sleep(60);
   return 0;
 }
