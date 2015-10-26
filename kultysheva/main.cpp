@@ -25,32 +25,25 @@ int main() {
       inputs[i][j] = i & (int)pow(2, ARITY - j - 1);
     }
   }
-
   for(int i = 0; i < ARITY; ++i){
-    int fork_id = fork();
-    if(fork_id == 0){
-      int nested_fork_id = fork();
-      if(nested_fork_id == 0){
-
-      } else
+    if(fork() == 0){
+      for(int j = 0; j < inputs_count; ++j){
+        if(fork() == 0){
+          if(expression(inputs[j])){
+            cout << "Truthy input in PID " << getpid() << ": ";
+            print_input(inputs[j]);
+            cout << endl;
+          } else {
+            cout << "False input in PID " << getpid() << ": ";
+            print_input(inputs[j]);
+            cout << endl;
+          }
+          kill(getpid(), SIGTERM);
+        }
+      }
+      break;
     }
   }
-
-  // for (int i = 0; i < inputs_count; ++i)
-  // {
-  //   if(fork() == 0){
-  //     if(expression(inputs[i])){
-  //       cout << "Truthy input in PID " << getpid() << ": ";
-  //       print_input(inputs[i]);
-  //       cout << endl;
-  //     } else {
-  //       cout << "False input in PID " << getpid() << ": ";
-  //       print_input(inputs[i]);
-  //       cout << endl;
-  //     }
-  //     kill(getpid(), SIGTERM);
-  //   }
-  // }
-  // sleep(60);
+  sleep(60);
   return 0;
 }
