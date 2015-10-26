@@ -3,7 +3,7 @@ using namespace std;
 
 const int ARITY = 3;
 bool expression(bool *x){
-  return x[0] && x[1] && x[2];
+  return x[0] || x[1] && x[2];
 }
 
 void print_input(bool *input){

@@ -2,35 +2,50 @@
 #include <fstream>
 #include <vector>
 #include <regex>
+#define READ_END 0
+#define WRITE_END 1
 
 using namespace std;
 const char EXAMPLE_USAGE[] = "Example usage of program: ./a.out file_name prototype";
-char AR_COMMAND[] = "ar -t ";
+char AR_COMMAND[] = "/bin/ar";
 
 class ArFinder{
 
-  vector<string> archive_names;
-
+  void print_prototype_matches(char *prototype){
+    // for (vector<string>::iterator it = archive_names.begin() ; it != archive_names.end(); ++it){
+    //   if(regex_match(*it, prototype_regex)){
+    //     cout << *it << endl;
+    //   }
+    // }
+  }
 public:
-  ArFinder(char *file_name){
+  ArFinder(char *file_name, char *prototype){
     char buff[1024];
     char *command = strcat(AR_COMMAND, file_name);
-    FILE *in = popen(command, "r");
-    while(fgets(buff, sizeof(buff), in) != NULL){
-      string str(buff);
-      str = str.substr(0, str.length()-1);
-      archive_names.push_back(str);
-    }
-  }
-
-  void print_prototype_matches(char *prototype){
+    int pid;
+    int fds[2];
     regex prototype_regex = regex(prototype);
-    for (vector<string>::iterator it = archive_names.begin() ; it != archive_names.end(); ++it){
-      if(regex_match(*it, prototype_regex)){
-        cout << *it << endl;
+    pipe(fds);
+
+    switch(pid = fork()){
+      case -1:
+        perror("Can't fork");
+        exit(1);
+      case 0:
+        dup2(fds[1], 1);
+        execl("/usr/bin/ar", "ar", "-t", file_name, NULL);
+        exit(1);
+      default:
+        dup2(fds[0], 0);
+        while(1){
+          cin >> buff;
+          if(regex_match(buff, prototype_regex)){
+            cout << buff << endl;
+          }
       }
     }
   }
+
 };
 
 int main(int argc, char **argv){
@@ -51,8 +66,6 @@ int main(int argc, char **argv){
   }
   // END ARGV parsing
 
-  ArFinder *m = new ArFinder(file_name);
-  m -> print_prototype_matches(prototype);
-
+  ArFinder *m = new ArFinder(file_name, prototype);
   return 0;
 }
